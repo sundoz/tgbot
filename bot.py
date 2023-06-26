@@ -6,10 +6,11 @@ import logging
 import traceback
 import html
 import json
+import datetime
 
 
 from dotenv import load_dotenv
-
+from pymongo import MongoClient
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.constants import ParseMode
 from telegram.ext import (
@@ -36,12 +37,30 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+client = MongoClient('localhost', 27017)
+db = client['delegations']
+wishs_collection = db['wishs_collection']
+
 CATEGORY, DESCRIPTION, CONTACT_INFO, CONTACT_NUMBER = range(4)
+
+def safe_to_db(user_data):
+    """Safe data into database"""
+    # try:
+    wishs_collection.insert_one({'time':datetime.datetime.now(),
+                                'category':user_data['category'], 
+                                'contact_data':user_data['contact_data'],
+                                'description':user_data['description']})  
+    # except KeyError: 
+    #     logger.info('KeyError')
+    #     raise KeyError
+    # except:
+    #     logger.info('Something went wrong')
+        
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Starts conversetion and asks problem category"""
-    reply_keyboard = [["ЖКХ", "Дороги", "Личные долги", "Друге проблемы"]]
+    reply_keyboard = [["ЖКХ", "Дороги", "Личные долги"],[ "Друге проблемы"]]
 
     await update.message.reply_text(
         "Выберете категорию проблемы или введите /cancel чтобы закончить диалог\n\n",
@@ -57,9 +76,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def problem_category(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Stores the selected category and ask to write info about situation"""
     user = update.message.from_user
+    user_data = context.user_data
+    text = update.message.text
+    user_data['category'] = text
     logger.info("Problem of %s: %s", user.first_name, update.message.text)
     await update.message.reply_text(
-        "Отлично! Опишите развернуто ситуацию с которой вы столкнулись",
+        "Опишите развернуто ситуацию с которой вы столкнулись",
         reply_markup=ReplyKeyboardRemove(),
     )
 
@@ -67,15 +89,20 @@ async def problem_category(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 
 async def description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Stores """
+    """Stores description and ask for contact data """
     user = update.message.from_user
-    # description_text = update.message.text
+    user_data = context.user_data
+    text = update.message.text
+    
+    user_data['description'] = text
+    
+    
     logger.info("Propblem description of %s: %s", user.name, update.message.text)
     await update.message.reply_text(
         "Спасибо за развернутое объяснение, далее прошу вас заполнить\
               информацию о вас и предоставить контактные данные,"
         "чтобы кандидат мог с вами связаться\n"
-        "Если вы не хотите давать контактные данные введите /skip\n"
+        "Если вы не хотите давать контактные данные введите /skip\n\n"
         "Введите ваше полное имя и номер мобильного телефона"
     )
 
@@ -87,22 +114,14 @@ async def description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 async def contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Stores the data about user and end the conversation"""
     user = update.message.from_user
+    user_data = context.user_data
+    text = update.message.text 
+    user_data['contact_data'] = text
     logger.info("Contact data of %s tg nick %s: %s", user.full_name, user.name, update.message.text)
     await update.message.reply_text(
-        "Спасибо большое за [чтото]"
+        "Спасибо большое за [чтото], чтобы отправить новый наказ введите /start"
     )
-
-    return ConversationHandler.END
-
-async def number(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Stores the data about user and end the conversation"""
-    user = update.message.from_user
-    # number = update.message.text
-    logger.info("Contact data of %s tg nick %s: %s", user.full_name, user.name, update.message.text)
-    await update.message.reply_text(
-        "Спасибо большое за [чтото]"
-    )
-
+    safe_to_db(user_data)
     return ConversationHandler.END
 
 
@@ -111,9 +130,12 @@ async def skip_contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     user = update.message.from_user
     logger.info("User %s did not send a info.", user.username)
     await update.message.reply_text(
-        "Спасибо что сообщили о проблеме."
+        "Спасибо что сообщили о проблеме. Если хотите отправить другой наказ /start"
     )
-
+    user = update.message.from_user
+    user_data = context.user_data
+    user_data['contact_data'] = 'Не указано'
+    safe_to_db(user_data) 
     return ConversationHandler.END
 
 
@@ -121,6 +143,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Cancels and ends the conversation."""
     user = update.message.from_user
     logger.info("User %s canceled the conversation.", user.first_name)
+   
     await update.message.reply_text(
         "Если хотите начать напишите /start", reply_markup=ReplyKeyboardRemove()
     )
@@ -172,7 +195,7 @@ def main() -> None:
                                          ~(filters.COMMAND | filters.Regex('^Cтоп$|^стоп$')),\
                                               description)],
             CONTACT_INFO: [
-                MessageHandler(filters.TEXT, contact_info),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, contact_info),
                 CommandHandler("skip", skip_contact_info),
             ],
         },
