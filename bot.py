@@ -37,6 +37,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Connect to db
 client = MongoClient('localhost', 27017)
 db = client['delegations']
 wishs_collection = db['wishs_collection']
