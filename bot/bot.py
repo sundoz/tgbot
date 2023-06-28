@@ -68,17 +68,31 @@ def safe_to_db(user_data):
                                     'category':user_data['category'], 
                                     'user_nickname':user_data['nickname'],
                                     'contact_data':user_data['contact_data'],
-                                    'description':user_data['description']})  
+                                    'description':user_data['description'],
+                                    'full_name':user_data['full_name']
+                                    })  
     except errors: 
         logger.info('Something wrong with database')
         raise 'Something wrong with database'
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Starts conversetion and asks problem category"""
-    reply_keyboard = [["ЖКХ", "Дороги", "Личные долги"],[ "Друге проблемы"]]
+    reply_keyboard = [
+                    ['ЖКХ', 
+                    'Благоустройство',
+                    'Дороги и транспорт', 
+                    'Трудоустройство'],
+                    ['Соцобеспечение',
+                    'Здравоохранение',
+                    'Образование',
+                    'Правопорядок'],
+                    ['Экология',
+                    'Местная власть', 
+                    'Другое']
+                    ]
 
     await update.message.reply_text(
-        "Выберете категорию проблемы или введите /cancel чтобы закончить диалог\n\n",
+        "Выберите тему для вашего обращения:\n\n",
         reply_markup=ReplyKeyboardMarkup(
             reply_keyboard, one_time_keyboard=True,\
                   input_field_placeholder='Выберете что вас беспокоит'
@@ -96,7 +110,7 @@ async def problem_category(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     user_data['category'] = text
     logger.info("Problem of %s: %s", user.first_name, update.message.text)
     await update.message.reply_text(
-        "Опишите развернуто ситуацию с которой вы столкнулись",
+        "Напишите, в чём именно заключается проблема или волнующий вас вопрос:",
         reply_markup=ReplyKeyboardRemove(),
     )
 
@@ -114,11 +128,10 @@ async def description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     keyboard = [[InlineKeyboardButton('Пропустить', callback_data=str(SKIP))],]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
-        "Спасибо за развернутое объяснение, далее прошу вас заполнить\
-              информацию о вас и предоставить контактные данные,"
-        "чтобы кандидат мог с вами связаться\n"
-        "Если вы не хотите давать контактные данные введите /skip\n\n"
-        "Введите ваше полное имя и номер мобильного телефона",
+        "Спасибо за Ваше обращение!\n"
+        "Заполните поля для обратной связи,"
+        "чтобы Вас смогли проинформировать о принимаемых мерах:"
+        "Ф.И.О",      
         reply_markup=reply_markup
     )
 
@@ -134,10 +147,11 @@ async def contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     text = update.message.text 
     user_data['contact_data'] = text
     user_data['nickname'] = user.name
-    
+    user_data['full_name'] = user.full_name
     logger.info("Contact data of %s tg nick %s: %s", user.full_name, user.name, update.message.text)
     await update.message.reply_text(
-        "Спасибо большое за [чтото], чтобы отправить новый наказ введите /start"
+        "Ваше обращение отправлено кандидату"
+        "в депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!"
     )
     safe_to_db(user_data)
     return END
@@ -149,12 +163,14 @@ async def skip_contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     logger.info("User %s did not send a info.", user.username)
     
     await update.message.reply_text(
-        "Спасибо что сообщили о проблеме. Если хотите отправить другой наказ /start"
+        "Ваше обращение отправлено кандидату в "
+        "депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!"
     )
     
     user_data = context.user_data
     user_data['contact_data'] = 'Не указано'
     user_data['nickname'] = user.name
+    user_data['full_name'] = user.full_name
     safe_to_db(user_data) 
     return END
 
@@ -166,11 +182,13 @@ async def skip_contact_info_callback(update: Update, context: ContextTypes.DEFAU
     logger.info("User %s did not send a info.", user.username)
     
     await update.callback_query.edit_message_text(
-        "Спасибо что сообщили о проблеме. Если хотите отправить другой наказ /start"
+        "Ваше обращение отправлено кандидату в "
+        "депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!"
     )
     user_data = context.user_data
     user_data['contact_data'] = 'Не указано'
     user_data['nickname'] = user.name
+    user_data['full_name'] = user.full_name
     safe_to_db(user_data)  
     
     return END

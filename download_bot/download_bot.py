@@ -17,7 +17,7 @@ load_dotenv()
 TOKEN = os.getenv('TOKEN2')
 TABLE1, TABLE2, TABLE3 = 'wishs_collection', '', ''
 
-field_name = [ '_id', 'time','nickname', 'category', 'contact_data', 'description' ]
+field_name = [ '_id', 'time','nickname', 'category', 'contact_data', 'description' ] #full_name
 
 client = MongoClient('localhost', 27017)
 db = client['delegations']
@@ -31,6 +31,7 @@ def db_select_data(collection) -> str:
     table_name = 'table.xlsx'
     df.rename(columns = {'time': "Время",
                     'category': 'Категория',
+                    'full_name': 'Имя в телеграме',
                     'user_nickname':'Ник в телеграме',
                     'contact_data':'Имя пользователя',
                     'description':'Описание проблемы'}, inplace = True)
