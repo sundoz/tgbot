@@ -10,54 +10,68 @@ import datetime
 
 
 from dotenv import load_dotenv
-from pymongo import MongoClient
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from pymongo import MongoClient, errors
+from telegram import (
+    ReplyKeyboardMarkup, 
+    ReplyKeyboardRemove,
+    InlineKeyboardButton, 
+    InlineKeyboardMarkup,
+    Update
+)
 from telegram.constants import ParseMode
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
     ContextTypes,
     ConversationHandler,
+    CallbackQueryHandler,
     MessageHandler,
     filters,
 )
 
 # Enable logging
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+    encoding='utf-8',
+    filename="py_log.log",
+    filemode="w",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", 
+    level=logging.INFO, 
 )
+
+# logging.basicConfig(
+#     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+# )
 logger = logging.getLogger(__name__)
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
 DEVELOPER_CHAT_ID = os.getenv("DEVELOPERS_CHAT")
 
 # Enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
+
+
 logger = logging.getLogger(__name__)
+
 
 # Connect to db
 client = MongoClient('localhost', 27017)
 db = client['delegations']
 wishs_collection = db['wishs_collection']
 
-CATEGORY, DESCRIPTION, CONTACT_INFO, CONTACT_NUMBER = range(4)
+CATEGORY, DESCRIPTION, CONTACT_INFO, CONTACT_NUMBER, SKIP = range(5)
+
+END = ConversationHandler.END
 
 def safe_to_db(user_data):
     """Safe data into database"""
-    # try:
-    wishs_collection.insert_one({'time':datetime.datetime.now(),
-                                'category':user_data['category'], 
-                                'contact_data':user_data['contact_data'],
-                                'description':user_data['description']})  
-    # except KeyError: 
-    #     logger.info('KeyError')
-    #     raise KeyError
-    # except:
-    #     logger.info('Something went wrong')
-        
-
+    try:
+        wishs_collection.insert_one({'time':datetime.datetime.now(),
+                                    'category':user_data['category'], 
+                                    'user_nickname':user_data['nickname'],
+                                    'contact_data':user_data['contact_data'],
+                                    'description':user_data['description']})  
+    except errors: 
+        logger.info('Something wrong with database')
+        raise 'Something wrong with database'
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Starts conversetion and asks problem category"""
@@ -96,15 +110,16 @@ async def description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     text = update.message.text
     
     user_data['description'] = text
-    
-    
     logger.info("Propblem description of %s: %s", user.name, update.message.text)
+    keyboard = [[InlineKeyboardButton('Пропустить', callback_data=str(SKIP))],]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
         "Спасибо за развернутое объяснение, далее прошу вас заполнить\
               информацию о вас и предоставить контактные данные,"
         "чтобы кандидат мог с вами связаться\n"
         "Если вы не хотите давать контактные данные введите /skip\n\n"
-        "Введите ваше полное имя и номер мобильного телефона"
+        "Введите ваше полное имя и номер мобильного телефона",
+        reply_markup=reply_markup
     )
 
     return CONTACT_INFO
@@ -118,26 +133,47 @@ async def contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     user_data = context.user_data
     text = update.message.text 
     user_data['contact_data'] = text
+    user_data['nickname'] = user.name
+    
     logger.info("Contact data of %s tg nick %s: %s", user.full_name, user.name, update.message.text)
     await update.message.reply_text(
         "Спасибо большое за [чтото], чтобы отправить новый наказ введите /start"
     )
     safe_to_db(user_data)
-    return ConversationHandler.END
+    return END
 
 
 async def skip_contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Skips the location and asks for info about the user."""
     user = update.message.from_user
     logger.info("User %s did not send a info.", user.username)
+    
     await update.message.reply_text(
         "Спасибо что сообщили о проблеме. Если хотите отправить другой наказ /start"
     )
-    user = update.message.from_user
+    
     user_data = context.user_data
     user_data['contact_data'] = 'Не указано'
+    user_data['nickname'] = user.name
     safe_to_db(user_data) 
-    return ConversationHandler.END
+    return END
+
+async def skip_contact_info_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int: 
+    """Skip contact info then user push inline button""" 
+    user = update.callback_query.from_user
+    query = update.callback_query
+    await query.answer()
+    logger.info("User %s did not send a info.", user.username)
+    
+    await update.callback_query.edit_message_text(
+        "Спасибо что сообщили о проблеме. Если хотите отправить другой наказ /start"
+    )
+    user_data = context.user_data
+    user_data['contact_data'] = 'Не указано'
+    user_data['nickname'] = user.name
+    safe_to_db(user_data)  
+    
+    return END
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -149,7 +185,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         "Если хотите начать напишите /start", reply_markup=ReplyKeyboardRemove()
     )
 
-    return ConversationHandler.END
+    return END
 
 
 
@@ -189,19 +225,21 @@ def main() -> None:
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
-            CATEGORY: [MessageHandler(filters.TEXT & \
-                                       ~(filters.COMMAND | filters.Regex('^Cтоп$|^стоп$')),\
+            CATEGORY: [MessageHandler(filters.TEXT & 
+                                       ~(filters.COMMAND | filters.Regex('^Cтоп$|^стоп$')),
                                           problem_category)],
-            DESCRIPTION: [MessageHandler(filters.TEXT & \
-                                         ~(filters.COMMAND | filters.Regex('^Cтоп$|^стоп$')),\
+            DESCRIPTION: [MessageHandler(filters.TEXT & 
+                                         ~(filters.COMMAND | filters.Regex('^Cтоп$|^стоп$')),
                                               description)],
             CONTACT_INFO: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, contact_info),
                 CommandHandler("skip", skip_contact_info),
+                CallbackQueryHandler(skip_contact_info_callback, pattern='^' + str(SKIP) + '$')
             ],
         },
         fallbacks=[CommandHandler("cancel", cancel),
-                   MessageHandler(filters.Regex('^Cтоп$|^стоп$'),cancel)],
+                  MessageHandler(filters.Regex('^Cтоп$|^стоп$'), cancel) 
+                   ],
     )
 
     application.add_handler(conv_handler)

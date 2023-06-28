@@ -1,0 +1,47 @@
+2023-06-28 19:01:39,190 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getMe "HTTP/1.1 200 OK"
+2023-06-28 19:01:39,258 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/deleteWebhook "HTTP/1.1 200 OK"
+2023-06-28 19:01:39,260 - telegram.ext.Application - INFO - Application started
+2023-06-28 19:01:43,231 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:01:43,378 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:01:44,979 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:01:44,982 - __main__ - INFO - Problem of Александр: Дороги
+2023-06-28 19:01:45,183 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:01:46,512 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:01:46,515 - __main__ - INFO - Propblem description of @sunndoz: asdf
+2023-06-28 19:01:46,667 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:01:48,109 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:01:48,187 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/answerCallbackQuery "HTTP/1.1 200 OK"
+2023-06-28 19:01:48,188 - __main__ - INFO - User sunndoz did not send a info.
+2023-06-28 19:01:48,296 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/editMessageText "HTTP/1.1 200 OK"
+2023-06-28 19:01:55,004 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:01:55,292 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:01:59,887 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:01:59,890 - __main__ - INFO - User Александр canceled the conversation.
+2023-06-28 19:02:00,018 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:02:03,192 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:02:03,365 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:02:04,880 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:02:04,888 - __main__ - INFO - Problem of Александр: Друге проблемы
+2023-06-28 19:02:05,010 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:02:07,702 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:02:09,876 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:02:09,880 - __main__ - INFO - Propblem description of @sunndoz: asdf
+2023-06-28 19:02:10,124 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:02:16,502 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:02:16,516 - __main__ - INFO - User sunndoz did not send a info.
+2023-06-28 19:02:16,791 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:02:19,906 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:02:20,062 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:02:24,722 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:02:24,728 - __main__ - INFO - Problem of Александр: Друге проблемы
+2023-06-28 19:02:24,850 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:02:34,844 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:02:44,981 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:02:53,131 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:02:53,132 - __main__ - INFO - Propblem description of @sunndoz: sakdjf;lasdlkfas
+2023-06-28 19:02:53,430 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:02:57,506 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/getUpdates "HTTP/1.1 200 OK"
+2023-06-28 19:02:57,508 - __main__ - INFO - Contact data of Александр Тараканов tg nick @sunndoz: asdfasdkfjas dfask dfjalds
+2023-06-28 19:02:57,615 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4/sendMessage "HTTP/1.1 200 OK"
+2023-06-28 19:03:04,424 - telegram.ext.Application - INFO - Application is stopping. This might take a moment.
+2023-06-28 19:03:04,425 - telegram.ext.Application - INFO - Application.stop() complete

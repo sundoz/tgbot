@@ -15,8 +15,8 @@ from telegram.ext import (
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN2')
-new_field_name = ['id','Дата', 'Категория', 'Контактные данные', 'Описание проблемы или наказа']
-field_name = [ '_id', 'time','category', 'contact_data', 'description' ]
+
+field_name = [ '_id', 'time','nickname', 'category', 'contact_data', 'description' ]
 
 client = MongoClient('localhost', 27017)
 db = client['delegations']
@@ -27,6 +27,12 @@ def db_select_data() -> str:
     data = wishs_collection.find()
     df = pd.DataFrame(data=data)
     table_name = 'table.xlsx'
+    df.rename(columns = {'time': "Время",
+                      'category': 'Категория',
+                      'user_nickname':'Ник в телеграме',
+                      'contact_data':'Имя пользователя',
+                      'description':'Описание проблемы'}, inplace = True)
+    df = df.iloc[:, 1:]
     with open(table_name, 'w') as excelFile:
         df.to_excel(table_name)
     return table_name
