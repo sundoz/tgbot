@@ -8,7 +8,7 @@ RUN pip install -r requirements.txt
 
 COPY bot.py .
 COPY download_bot.py .
-ENV TOKEN=5898838534:AAHhJwk2v56idXyWx9GWxLI6gKLaIT33rP4
+ENV TOKEN=
 
 CMD ['python', 'bot.py']
 
