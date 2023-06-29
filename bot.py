@@ -38,9 +38,7 @@ logging.basicConfig(
     level=logging.INFO, 
 )
 
-# logging.basicConfig(
-#     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-# )
+
 logger = logging.getLogger(__name__)
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -53,11 +51,11 @@ logger = logging.getLogger(__name__)
 
 
 # Connect to db
-client = MongoClient('localhost', 27017)
+client = MongoClient('mongodb', 27017)
 db = client['delegations']
 wishs_collection = db['wishs_collection']
 
-CATEGORY, DESCRIPTION, CONTACT_INFO, CONTACT_NUMBER, SKIP = range(5)
+CATEGORY, DESCRIPTION, CONTACT_INFO, CONTACT_NUMBER, SKIP, ADDRESS, PHONE = range(7)
 
 END = ConversationHandler.END
 
@@ -67,9 +65,11 @@ def safe_to_db(user_data):
         wishs_collection.insert_one({'time':datetime.datetime.now(),
                                     'category':user_data['category'], 
                                     'user_nickname':user_data['nickname'],
+                                    'full_name':user_data['full_name'],
                                     'contact_data':user_data['contact_data'],
+                                    'phone_number':user_data['phone_number'],
+                                    'address': user_data['address'],
                                     'description':user_data['description'],
-                                    'full_name':user_data['full_name']
                                     })  
     except errors: 
         logger.info('Something wrong with database')
@@ -131,8 +131,9 @@ async def description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         "Спасибо за Ваше обращение!\n"
         "Заполните поля для обратной связи,"
         "чтобы Вас смогли проинформировать о принимаемых мерах:"
-        "Ф.И.О",      
-        reply_markup=reply_markup
+        "Введите Ф.И.О",      
+        reply_markup=reply_markup,
+        
     )
 
     return CONTACT_INFO
@@ -149,11 +150,46 @@ async def contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     user_data['nickname'] = user.name
     user_data['full_name'] = user.full_name
     logger.info("Contact data of %s tg nick %s: %s", user.full_name, user.name, update.message.text)
+    keyboard = [[InlineKeyboardButton('Пропустить', callback_data=str(SKIP))],]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
-        "Ваше обращение отправлено кандидату"
+        
+        "Введите адрес проживания:",
+        reply_markup=reply_markup
+    )
+    
+    return ADDRESS
+
+async def address(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    
+    user = update.message.from_user
+    user_data = context.user_data
+    text = update.message.text 
+    user_data['address'] = text
+    logger.info("Contact data of %s tg nick %s: %s", user.full_name, user.name, update.message.text)
+    keyboard = [[InlineKeyboardButton('Пропустить', callback_data=str(SKIP))],]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        "Введите номер телефона:",
+        reply_markup=reply_markup
+    )
+    return PHONE
+
+async def phone(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    
+    user = update.message.from_user
+    user_data = context.user_data
+    text = update.message.text 
+    user_data['phone_number'] = text
+    logger.info("Contact data of %s tg nick %s: %s", user.full_name, user.name, update.message.text)
+    
+    await update.message.reply_text(
+        "Ваше обращение отправлено кандидату "
         "в депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!"
     )
-    safe_to_db(user_data)
+    safe_to_db(user_data)   
     return END
 
 
@@ -168,9 +204,12 @@ async def skip_contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     )
     
     user_data = context.user_data
-    user_data['contact_data'] = 'Не указано'
+    user_data['contact_data'] = user_data['contact_data'] if 'contact_data' in user_data else 'Не указано'
+    user_data['address'] = user_data['address'] if 'address' in user_data else 'Не указано'
+    user_data['phone_number'] =\
+          user_data['phone_number'] if 'phone_number' in user_data else 'Не указано'
     user_data['nickname'] = user.name
-    user_data['full_name'] = user.full_name
+    user_data['full_name'] = user.full_name 
     safe_to_db(user_data) 
     return END
 
@@ -186,9 +225,11 @@ async def skip_contact_info_callback(update: Update, context: ContextTypes.DEFAU
         "депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!"
     )
     user_data = context.user_data
-    user_data['contact_data'] = 'Не указано'
+    user_data['contact_data'] = user_data['contact_data'] if 'contact_data' in user_data else 'Не указано'
     user_data['nickname'] = user.name
     user_data['full_name'] = user.full_name
+    user_data['address'] = user_data['address'] if 'address' in user_data else 'Не указано'
+    user_data['phone_number'] = 'Не указано'
     safe_to_db(user_data)  
     
     return END
@@ -239,21 +280,32 @@ def main() -> None:
     """Run the bot."""
     application = ApplicationBuilder().token(TOKEN).build()
     
-    # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
+   
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
             CATEGORY: [MessageHandler(filters.TEXT & 
-                                       ~(filters.COMMAND | filters.Regex('^Cтоп$|^стоп$')),
+                                       ~(filters.COMMAND),
                                           problem_category)],
             DESCRIPTION: [MessageHandler(filters.TEXT & 
-                                         ~(filters.COMMAND | filters.Regex('^Cтоп$|^стоп$')),
+                                         ~(filters.COMMAND),
                                               description)],
             CONTACT_INFO: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, contact_info),
                 CommandHandler("skip", skip_contact_info),
                 CallbackQueryHandler(skip_contact_info_callback, pattern='^' + str(SKIP) + '$')
             ],
+            ADDRESS: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, address),
+                CommandHandler("skip", skip_contact_info),
+                CallbackQueryHandler(skip_contact_info_callback, pattern='^' + str(SKIP) + '$')
+            ],
+            PHONE: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, phone),
+                CommandHandler("skip", skip_contact_info),
+                CallbackQueryHandler(skip_contact_info_callback, pattern='^' + str(SKIP) + '$')
+            ]
+
         },
         fallbacks=[CommandHandler("cancel", cancel),
                   MessageHandler(filters.Regex('^Cтоп$|^стоп$'), cancel) 

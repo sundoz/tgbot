@@ -1,4 +1,6 @@
 .env
 env
 .pycache
-requirements.txt
+
+py_log.log
+dockerdata
