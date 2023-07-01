@@ -16,7 +16,9 @@ from telegram import (
     ReplyKeyboardRemove,
     InlineKeyboardButton, 
     InlineKeyboardMarkup,
-    Update
+    KeyboardButton,
+    Update,
+    WebAppInfo,
 )
 from telegram.constants import ParseMode
 from telegram.ext import (
@@ -27,6 +29,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     MessageHandler,
     filters,
+    
 )
 
 # Enable logging
@@ -43,19 +46,19 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
 DEVELOPER_CHAT_ID = os.getenv("DEVELOPERS_CHAT")
-
+URL = WEB_URL
 # Enable logging
 
 
 logger = logging.getLogger(__name__)
 
-
+MONGO = os.getenv('MONGO')
 # Connect to db
-client = MongoClient('mongodb', 27017)
+client = MongoClient(MONGO, 27017)
 db = client['delegations']
 wishs_collection = db['wishs_collection']
 
-CATEGORY, DESCRIPTION, CONTACT_INFO, CONTACT_NUMBER, SKIP, ADDRESS, PHONE = range(7)
+CATEGORY, DESCRIPTION, CONTACT_INFO, CONTACT_NUMBER, SKIP, ADDRESS, PHONE, AGREEMENT = range(8)
 
 END = ConversationHandler.END
 
@@ -70,6 +73,7 @@ def safe_to_db(user_data):
                                     'phone_number':user_data['phone_number'],
                                     'address': user_data['address'],
                                     'description':user_data['description'],
+                                    'is_agree':user_data['is_agree']
                                     })  
     except errors: 
         logger.info('Something wrong with database')
@@ -192,6 +196,14 @@ async def phone(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     safe_to_db(user_data)   
     return END
 
+def user_input_to_user_data(user_data, user):
+    user_data['contact_data'] = user_data['contact_data'] if 'contact_data' in user_data else 'Не указано'
+    user_data['address'] = user_data['address'] if 'address' in user_data else 'Не указано'
+    user_data['phone_number'] =\
+          user_data['phone_number'] if 'phone_number' in user_data else 'Не указано'
+    user_data['nickname'] = user.name
+    user_data['full_name'] = user.full_name 
+    return user_data
 
 async def skip_contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Skips the location and asks for info about the user."""
@@ -204,14 +216,12 @@ async def skip_contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     )
     
     user_data = context.user_data
-    user_data['contact_data'] = user_data['contact_data'] if 'contact_data' in user_data else 'Не указано'
-    user_data['address'] = user_data['address'] if 'address' in user_data else 'Не указано'
-    user_data['phone_number'] =\
-          user_data['phone_number'] if 'phone_number' in user_data else 'Не указано'
-    user_data['nickname'] = user.name
-    user_data['full_name'] = user.full_name 
+    if 'contact_data' in user_data:
+        return AGREEMENT
+    user_data = user_input_to_user_data(user_data, user) 
     safe_to_db(user_data) 
     return END
+ 
 
 async def skip_contact_info_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int: 
     """Skip contact info then user push inline button""" 
@@ -220,16 +230,15 @@ async def skip_contact_info_callback(update: Update, context: ContextTypes.DEFAU
     await query.answer()
     logger.info("User %s did not send a info.", user.username)
     
+  
+    if 'contact_data' in user_data:
+        return AGREEMENT
+    user_data = context.user_data
+    user_data = user_input_to_user_data(user_data, user)
     await update.callback_query.edit_message_text(
         "Ваше обращение отправлено кандидату в "
         "депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!"
     )
-    user_data = context.user_data
-    user_data['contact_data'] = user_data['contact_data'] if 'contact_data' in user_data else 'Не указано'
-    user_data['nickname'] = user.name
-    user_data['full_name'] = user.full_name
-    user_data['address'] = user_data['address'] if 'address' in user_data else 'Не указано'
-    user_data['phone_number'] = 'Не указано'
     safe_to_db(user_data)  
     
     return END
@@ -245,6 +254,35 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     )
 
     return END
+
+
+async def agreement(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a message with a button that opens a the web app."""
+    await update.message.reply_text(
+        "Примите соглашение на обработку персональных данных",
+        reply_markup=ReplyKeyboardMarkup.from_button(
+            KeyboardButton(
+                text="Открыть соглашение",
+                web_app=WebAppInfo(url=URL),
+            )
+        ),
+    )
+
+
+# Handle incoming WebAppData
+async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Print the received data and remove the button."""
+    user = update.message.from_user
+    user_data = context.user_data
+    user_data = user_input_to_user_data(user_data, user)
+    data = json.loads(update.effective_message.web_app_data.data)
+    user_data['is_agree'] = 'Да' if data['is_agree'] else 'Нет'
+    safe_to_db(user_data)  
+    await update.message.reply_text(
+        "Ваше обращение отправлено кандидату в "
+        "депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!",
+        reply_markup=ReplyKeyboardRemove(),
+    )
 
 
 
@@ -304,15 +342,21 @@ def main() -> None:
                 MessageHandler(filters.TEXT & ~filters.COMMAND, phone),
                 CommandHandler("skip", skip_contact_info),
                 CallbackQueryHandler(skip_contact_info_callback, pattern='^' + str(SKIP) + '$')
+            ],
+            AGREEMENT:[
+                
             ]
+
 
         },
         fallbacks=[CommandHandler("cancel", cancel),
                   MessageHandler(filters.Regex('^Cтоп$|^стоп$'), cancel) 
                    ],
     )
-
+    test_handler = CommandHandler('agreement', agreement)
+    application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data))
     application.add_handler(conv_handler)
+    application.add_handler(test_handler)
     application.add_error_handler(error_handler)
     # Run the bot until the user presses Ctrl-C
     application.run_polling()

@@ -15,6 +15,7 @@ from telegram.ext import (
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN2')
+MONGO = os.getenv('MONGO')
 TABLE1, TABLE2, TABLE3 = 'wishs_collection', '', ''
 
 field_name = [ '_id', 'time','nickname', 'category', 'contact_data', 'description' ] #full_name
