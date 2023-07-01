@@ -46,7 +46,8 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
 DEVELOPER_CHAT_ID = os.getenv("DEVELOPERS_CHAT")
-URL = WEB_URL
+
+URL = os.getenv('WEB_URL')
 # Enable logging
 
 
@@ -75,7 +76,7 @@ def safe_to_db(user_data):
                                     'description':user_data['description'],
                                     'is_agree':user_data['is_agree']
                                     })  
-    except errors: 
+    except errors.PyMongoError: 
         logger.info('Something wrong with database')
         raise 'Something wrong with database'
 
@@ -181,8 +182,6 @@ async def address(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return PHONE
 
 async def phone(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
-    
     user = update.message.from_user
     user_data = context.user_data
     text = update.message.text 
@@ -190,11 +189,16 @@ async def phone(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logger.info("Contact data of %s tg nick %s: %s", user.full_name, user.name, update.message.text)
     
     await update.message.reply_text(
-        "Ваше обращение отправлено кандидату "
-        "в депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!"
-    )
-    safe_to_db(user_data)   
-    return END
+            "Примите соглашение на обработку персональных данных",
+            reply_markup=ReplyKeyboardMarkup.from_button(
+                KeyboardButton(
+                    text="Открыть соглашение",
+                    web_app=WebAppInfo(url=URL),
+                )
+            ),
+        )
+     
+    return AGREEMENT
 
 def user_input_to_user_data(user_data, user):
     user_data['contact_data'] = user_data['contact_data'] if 'contact_data' in user_data else 'Не указано'
@@ -209,16 +213,24 @@ async def skip_contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     """Skips the location and asks for info about the user."""
     user = update.message.from_user
     logger.info("User %s did not send a info.", user.username)
-    
+    user_data = context.user_data
+    if 'contact_data' in user_data: 
+        await update.message.reply_text(
+            "Примите соглашение на обработку персональных данных",
+            reply_markup=ReplyKeyboardMarkup.from_button(
+                KeyboardButton(
+                    text="Открыть соглашение",
+                    web_app=WebAppInfo(url=URL),
+                )
+            ),
+        )
+        return AGREEMENT
     await update.message.reply_text(
         "Ваше обращение отправлено кандидату в "
         "депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!"
     )
-    
-    user_data = context.user_data
-    if 'contact_data' in user_data:
-        return AGREEMENT
-    user_data = user_input_to_user_data(user_data, user) 
+    user_data = user_input_to_user_data(user_data, user)
+    user_data['is_agree'] = 'Нет' 
     safe_to_db(user_data) 
     return END
  
@@ -230,11 +242,20 @@ async def skip_contact_info_callback(update: Update, context: ContextTypes.DEFAU
     await query.answer()
     logger.info("User %s did not send a info.", user.username)
     
-  
-    if 'contact_data' in user_data:
-        return AGREEMENT
     user_data = context.user_data
+    if 'contact_data' in user_data:
+        await update.message.reply_text(
+            "Примите соглашение на обработку персональных данных",
+            reply_markup=ReplyKeyboardMarkup.from_button(
+                KeyboardButton(
+                    text="Открыть соглашение",
+                    web_app=WebAppInfo(url=URL),
+                )
+            ),
+        )
+        return AGREEMENT
     user_data = user_input_to_user_data(user_data, user)
+    user_data['is_agree'] = 'Нет'
     await update.callback_query.edit_message_text(
         "Ваше обращение отправлено кандидату в "
         "депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!"
@@ -256,17 +277,6 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return END
 
 
-async def agreement(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message with a button that opens a the web app."""
-    await update.message.reply_text(
-        "Примите соглашение на обработку персональных данных",
-        reply_markup=ReplyKeyboardMarkup.from_button(
-            KeyboardButton(
-                text="Открыть соглашение",
-                web_app=WebAppInfo(url=URL),
-            )
-        ),
-    )
 
 
 # Handle incoming WebAppData
@@ -277,14 +287,12 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     user_data = user_input_to_user_data(user_data, user)
     data = json.loads(update.effective_message.web_app_data.data)
     user_data['is_agree'] = 'Да' if data['is_agree'] else 'Нет'
-    safe_to_db(user_data)  
     await update.message.reply_text(
         "Ваше обращение отправлено кандидату в "
         "депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!",
         reply_markup=ReplyKeyboardRemove(),
     )
-
-
+    safe_to_db(user_data)  
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Log the error and send a telegram message to notify the developer."""
@@ -344,7 +352,7 @@ def main() -> None:
                 CallbackQueryHandler(skip_contact_info_callback, pattern='^' + str(SKIP) + '$')
             ],
             AGREEMENT:[
-                
+                MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data)
             ]
 
 
@@ -353,10 +361,10 @@ def main() -> None:
                   MessageHandler(filters.Regex('^Cтоп$|^стоп$'), cancel) 
                    ],
     )
-    test_handler = CommandHandler('agreement', agreement)
-    application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data))
+    # test_handler = CommandHandler('agreement', agreement)
+    # application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data))
     application.add_handler(conv_handler)
-    application.add_handler(test_handler)
+    #application.add_handler(test_handler)
     application.add_error_handler(error_handler)
     # Run the bot until the user presses Ctrl-C
     application.run_polling()

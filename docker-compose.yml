@@ -10,6 +10,8 @@ services:
       - .:/tgbot
     environment:
       - TOKEN=${TOKEN}
+      - DEVELOPERS_CHAT=${DEVELOPERS_CHAT}
+      - WEB_URL=${WEB_URL}
     depends_on:
       - mongodb
     links:
