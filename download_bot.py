@@ -38,7 +38,8 @@ def db_select_data(collection) -> str:
                     'contact_data':'Имя пользователя',
                     'address': 'Адрес',
                     'phone_number': 'Номер телефона',
-                    'description':'Описание проблемы'}, inplace = True)
+                    'description':'Описание проблемы',
+                    'is_agree': 'Согласие на использование'}, inplace = True)
     df = df.iloc[:, 1:]
     with open(table_name, 'w') as excelFile:
         df.to_excel(table_name)
