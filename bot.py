@@ -77,8 +77,8 @@ def safe_to_db(user_data):
                                     'is_agree':user_data['is_agree']
                                     })  
     except errors.PyMongoError: 
-        logger.info('Something wrong with database')
-        raise 'Something wrong with database'
+        logger.info('Something is wrong with the database')
+        raise 'Something is wrong with the database'
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Starts conversetion and asks problem category"""
@@ -239,12 +239,13 @@ async def skip_contact_info_callback(update: Update, context: ContextTypes.DEFAU
     """Skip contact info then user push inline button""" 
     user = update.callback_query.from_user
     query = update.callback_query
-    await query.answer()
+    #await query.answer()
     logger.info("User %s did not send a info.", user.username)
-    
+    await query.answer()
     user_data = context.user_data
     if 'contact_data' in user_data:
-        await update.message.reply_text(
+       #await update.callback_query.edit_message_text(
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=\
             "Примите соглашение на обработку персональных данных",
             reply_markup=ReplyKeyboardMarkup.from_button(
                 KeyboardButton(
