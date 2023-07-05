@@ -20,7 +20,7 @@ TABLE1, TABLE2, TABLE3 = 'wishs_collection', '', ''
 
 field_name = [ '_id', 'time','nickname', 'category', 'contact_data', 'description' ] #full_name
 
-client = MongoClient('mongodb', 27017)
+client = MongoClient(MONGO, 27017)
 db = client['delegations']
 reply_keyboard = [["Скачать таблицу 1"], ["Скачать таблицу 2"], ["Скачать таблицу 3"], ["Стоп"]]
 
