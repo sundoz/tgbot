@@ -79,7 +79,7 @@ def safe_to_db(user_data):
     except errors.PyMongoError: 
         logger.info('Something is wrong with the database')
         raise 'Something is wrong with the database'
-    user_data = {}
+    
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Starts conversetion and asks problem category"""
@@ -128,9 +128,10 @@ async def description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     await update.message.reply_text(
         "Спасибо за Ваше обращение!\n"
         "Заполните поля для обратной связи,"
-        "чтобы Вас смогли проинформировать о принимаемых мерах:"
-        "Введите Ф.И.О",      
+        "чтобы Вас смогли проинформировать о принимаемых мерах:\n\n"
+        "Введите Ваше полное имя",      
         reply_markup=reply_markup,
+        
         
     )
 
@@ -182,7 +183,7 @@ async def phone(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logger.info("Contact data of %s tg nick %s: %s", user.full_name, user.name, update.message.text)
     
     await update.message.reply_text(
-            "Предоставьте соглашение на обработку персональных данных",
+            "Предоставьте согласие на обработку персональных данных",
             reply_markup=ReplyKeyboardMarkup.from_button(
                 KeyboardButton(
                     text="Открыть соглашение",
@@ -225,6 +226,7 @@ async def skip_contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     user_data = user_input_to_user_data(user_data, user)
     user_data['is_agree'] = 'Нет' 
     safe_to_db(user_data) 
+    user_data.clear()
     return END
  
 
@@ -255,7 +257,7 @@ async def skip_contact_info_callback(update: Update, context: ContextTypes.DEFAU
         "депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!"
     )
     safe_to_db(user_data)  
-    
+    user_data.clear() 
     return END
 
 
@@ -287,6 +289,7 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         reply_markup=ReplyKeyboardRemove(),
     )
     safe_to_db(user_data)  
+    user_data.clear()
     return END
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
