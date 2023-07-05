@@ -182,7 +182,7 @@ async def phone(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logger.info("Contact data of %s tg nick %s: %s", user.full_name, user.name, update.message.text)
     
     await update.message.reply_text(
-            "Примите соглашение на обработку персональных данных",
+            "Предоставьте соглашение на обработку персональных данных",
             reply_markup=ReplyKeyboardMarkup.from_button(
                 KeyboardButton(
                     text="Открыть соглашение",
