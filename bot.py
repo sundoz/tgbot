@@ -7,6 +7,7 @@ import traceback
 import html
 import json
 import datetime
+import pytz 
 
 
 from dotenv import load_dotenv
@@ -66,7 +67,7 @@ END = ConversationHandler.END
 def safe_to_db(user_data):
     """Safe data into database"""
     try:
-        wishs_collection.insert_one({'time':datetime.datetime.now(),
+        wishs_collection.insert_one({'time':datetime.datetime.now(pytz.timezone('Europe/Moscow')),
                                     'category':user_data['category'], 
                                     'user_nickname':user_data['nickname'],
                                     'full_name':user_data['full_name'],
