@@ -79,21 +79,14 @@ def safe_to_db(user_data):
     except errors.PyMongoError: 
         logger.info('Something is wrong with the database')
         raise 'Something is wrong with the database'
+    user_data = {}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Starts conversetion and asks problem category"""
     reply_keyboard = [
-                    ['ЖКХ', 
-                    'Благоустройство',
-                    'Дороги и транспорт', 
-                    'Трудоустройство'],
-                    ['Соцобеспечение',
-                    'Здравоохранение',
-                    'Образование',
-                    'Правопорядок'],
-                    ['Экология',
-                    'Местная власть', 
-                    'Другое']
+                    ['ЖКХ', 'Благоустройство', 'Дороги и транспорт', 'Трудоустройство'],
+                    ['Соцобеспечение', 'Здравоохранение', 'Образование', 'Правопорядок'],
+                    ['Экология', 'Местная власть', 'Другое']
                     ]
 
     await update.message.reply_text(
