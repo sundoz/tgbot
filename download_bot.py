@@ -30,6 +30,7 @@ def db_select_data(collection) -> str:
     data = wishs_collection.find()
     df = pd.DataFrame(data=data)
     table_name = 'table.xlsx'
+    df['time'].tz_convert('Europe/Moscow')
     df.rename(columns = {'time': "Время",
                     'category': 'Категория',
                     'full_name': 'Имя в телеграме',

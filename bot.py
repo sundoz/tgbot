@@ -64,7 +64,7 @@ CATEGORY, DESCRIPTION, CONTACT_INFO, CONTACT_NUMBER, SKIP, ADDRESS, PHONE, AGREE
 
 END = ConversationHandler.END
 
-def safe_to_db(user_data):
+def safe_to_db(user_data): # save
     """Safe data into database"""
     try:
         wishs_collection.insert_one({'time':datetime.datetime.now(pytz.timezone('Europe/Moscow')),
@@ -77,7 +77,7 @@ def safe_to_db(user_data):
                                     'description':user_data['description'],
                                     'is_agree':user_data['is_agree']
                                     })  
-    except errors.PyMongoError: 
+    except errors.PyMongoError as e: 
         logger.info('Something is wrong with the database')
         raise 'Something is wrong with the database'
     
