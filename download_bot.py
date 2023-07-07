@@ -30,6 +30,9 @@ def db_select_data(collection) -> str:
     data = wishs_collection.find()
     df = pd.DataFrame(data=data)
     table_name = 'table.xlsx'
+    df.set_index('time', inplace=True)  # Assuming 'Время' is the column containing the timestamps
+    df.index = df.index.tz_localize('UTC').tz_convert('Europe/Moscow')
+    df.reset_index(drop=False, inplace=True)
    
     df.rename(columns = {'time': "Время",
                     'category': 'Категория',
@@ -40,9 +43,14 @@ def db_select_data(collection) -> str:
                     'phone_number': 'Номер телефона',
                     'description':'Описание проблемы',
                     'is_agree': 'Согласие на использование'}, inplace = True)
-    df = df.iloc[:, 1:]
-    with open(table_name, 'w') as excelFile:
-        df.to_excel(table_name)
+    df = df[['Время','Категория','Имя в телеграме','Ник в телеграме','Имя пользователя','Адрес','Номер телефона','Описание проблемы','Согласие на использование']]
+    df['Время'] = df['Время'].dt.tz_localize(None)
+    
+    try:
+        with open(table_name, 'w') as excelFile:
+            df.to_excel(table_name)
+    except errors.PyMongoError as err:
+        print('Something is wrong with db')
 
 
     return table_name
