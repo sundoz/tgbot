@@ -39,10 +39,10 @@ services:
     environment:
       - MONGO_DATA_DIR=mongo_volume
     volumes:
-          - mongo_volume:/data/db
+      - mongo_volume:/data/db
     ports:
       - 27017:27017
     command: mongod
-    
+
 volumes:
   - mongo_volume:
