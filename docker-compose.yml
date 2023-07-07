@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 services:
 
@@ -37,9 +37,12 @@ services:
     restart: always
     image: mongo:latest
     environment:
-      - MONGO_DATA_DIR=/dockerdata/db
+      - MONGO_DATA_DIR=mongo_volume
     volumes:
-          - ./dockerdata/db:/data/db
+          - mongo_volume:/data/db
     ports:
       - 27017:27017
     command: mongod
+    
+volumes:
+  - mongo_volume:
