@@ -45,4 +45,4 @@ services:
     command: mongod
 
 volumes:
-  - mongo_volume:
+  mongo_volume:
