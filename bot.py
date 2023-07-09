@@ -7,7 +7,7 @@ import traceback
 import html
 import json
 import datetime
-import pytz 
+
 
 
 from dotenv import load_dotenv
@@ -64,10 +64,10 @@ CATEGORY, DESCRIPTION, CONTACT_INFO, CONTACT_NUMBER, SKIP, ADDRESS, PHONE, AGREE
 
 END = ConversationHandler.END
 
-def safe_to_db(user_data): # save
-    """Safe data into database"""
+def save_to_db(user_data): 
+    """Save data into database"""
     try:
-        wishs_collection.insert_one({'time':datetime.datetime.now(pytz.timezone('Europe/Moscow')),
+        wishs_collection.insert_one({'time':datetime.datetime.now(),
                                     'category':user_data['category'], 
                                     'user_nickname':user_data['nickname'],
                                     'full_name':user_data['full_name'],
@@ -226,7 +226,7 @@ async def skip_contact_info(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     )
     user_data = user_input_to_user_data(user_data, user)
     user_data['is_agree'] = 'Нет' 
-    safe_to_db(user_data) 
+    save_to_db(user_data) 
     user_data.clear()
     return END
  
@@ -257,7 +257,7 @@ async def skip_contact_info_callback(update: Update, context: ContextTypes.DEFAU
         "Ваше обращение отправлено кандидату в "
         "депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!"
     )
-    safe_to_db(user_data)  
+    save_to_db(user_data)  
     user_data.clear() 
     return END
 
@@ -289,7 +289,7 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "депутаты Д.В. Бурыке. Благодарим за активную гражданскую позицию!",
         reply_markup=ReplyKeyboardRemove(),
     )
-    safe_to_db(user_data)  
+    save_to_db(user_data)  
     user_data.clear()
     return END
 
