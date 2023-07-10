@@ -16,12 +16,10 @@ from telegram.ext import (
 load_dotenv()
 TOKEN = os.getenv('TOKEN2')
 MONGO = os.getenv('MONGO')
-MONGO_USER = os.getenv('MONGO_USER')
-MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
+
 # Connect to db
 client = MongoClient(host=MONGO, 
-                    port=27017, 
-                     )
+                    port=27017)
 TABLE1, TABLE2, TABLE3 = 'wishs_collection', '', ''
 
 field_name = [ '_id', 'time','nickname', 'category', 'contact_data', 'description' ] #full_name

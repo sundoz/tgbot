@@ -36,9 +36,6 @@ services:
   mongodb:
     restart: always
     image: mongo:latest
-    environment:
-      - MONGO_DATA_DIR=mongo_volume
-     
     volumes:
       - mongo_volume:/data/db
     ports:

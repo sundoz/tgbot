@@ -30,8 +30,9 @@ from telegram.ext import (
     CallbackQueryHandler,
     MessageHandler,
     filters,
-    
 )
+
+from db import *
 
 # Enable logging
 logging.basicConfig(
@@ -55,16 +56,7 @@ URL = os.getenv('WEB_URL')
 logger = logging.getLogger(__name__)
 
 MONGO = os.getenv('MONGO')
-MONGO_USER = os.getenv('MONGO_USER')
-MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
-# Connect to db
-client = MongoClient(host=MONGO, 
-                     port=27017, 
-                    #  username=MONGO_USER, 
-                    #  password=MONGO_PASSWORD, 
-                     )
-db = client['delegations']
-wishs_collection = db['wishs_collection']
+wishs_collection = create_client(MONGO)
 
 CATEGORY, DESCRIPTION, CONTACT_INFO, CONTACT_NUMBER, SKIP, ADDRESS, PHONE, AGREEMENT = range(8)
 
