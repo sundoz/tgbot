@@ -55,8 +55,14 @@ URL = os.getenv('WEB_URL')
 logger = logging.getLogger(__name__)
 
 MONGO = os.getenv('MONGO')
+MONGO_USER = os.getenv('MONGO_USER')
+MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
 # Connect to db
-client = MongoClient(MONGO, 27017)
+client = MongoClient(host=MONGO, 
+                     port=27017, 
+                    #  username=MONGO_USER, 
+                    #  password=MONGO_PASSWORD, 
+                     )
 db = client['delegations']
 wishs_collection = db['wishs_collection']
 
@@ -79,7 +85,7 @@ def save_to_db(user_data):
                                     })  
     except errors.PyMongoError as e: 
         logger.info('Something is wrong with the database')
-        raise 'Something is wrong with the database'
+        raise e
     
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
