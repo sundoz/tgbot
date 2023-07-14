@@ -18,18 +18,20 @@ TOKEN = os.getenv('TOKEN2')
 MONGO = os.getenv('MONGO')
 
 # Connect to db
-client = MongoClient(host=MONGO, 
-                    port=27017)
+
 TABLE1, TABLE2, TABLE3 = 'wishs_collection', '', ''
 
 field_name = [ '_id', 'time','nickname', 'category', 'contact_data', 'description' ] #full_name
 
 
-db = client['delegations']
+
 reply_keyboard = [["Скачать таблицу 1"], ["Скачать таблицу 2"], ["Скачать таблицу 3"], ["Стоп"]]
 
 def db_select_data(collection) -> str:
     
+    client = MongoClient(host=MONGO, 
+                    port=27017) 
+    db = client['delegations']
     wishs_collection = db[collection]
     data = wishs_collection.find()
     df = pd.DataFrame(data=data)
@@ -63,7 +65,7 @@ def db_select_data(collection) -> str:
             df.to_excel(table_name)
     except errors.PyMongoError as err:
         print('Something is wrong with db')
-
+    client.close()
 
     return table_name
 
