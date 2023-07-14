@@ -32,7 +32,8 @@ from telegram.ext import (
     filters,
 )
 
-from db import *
+
+
 
 # Enable logging
 logging.basicConfig(
@@ -56,7 +57,7 @@ URL = os.getenv('WEB_URL')
 logger = logging.getLogger(__name__)
 
 MONGO = os.getenv('MONGO')
-wishs_collection = create_client(MONGO)
+
 
 CATEGORY, DESCRIPTION, CONTACT_INFO, CONTACT_NUMBER, SKIP, ADDRESS, PHONE, AGREEMENT = range(8)
 
@@ -65,6 +66,10 @@ END = ConversationHandler.END
 def save_to_db(user_data): 
     """Save data into database"""
     try:
+        client = MongoClient(host=MONGO, 
+                        port=27017)
+        db = client['delegations']
+        wishs_collection = db['wishs_collection']
         wishs_collection.insert_one({'time':datetime.datetime.now(),
                                     'category':user_data['category'], 
                                     'user_nickname':user_data['nickname'],
@@ -75,6 +80,7 @@ def save_to_db(user_data):
                                     'description':user_data['description'],
                                     'is_agree':user_data['is_agree']
                                     })  
+        client.close()
     except errors.PyMongoError as e: 
         logger.info('Something is wrong with the database')
         raise e
